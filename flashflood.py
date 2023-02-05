@@ -45,6 +45,10 @@ while run:
                 selection_surf = pygame.Surface(dimensions, pygame.SRCALPHA)
                 l = r = u = d = None
                 print("Saved Image")
+            
+            elif event.key = pygame.K_ESC:
+                selection_surf = pygame.Surface(dimensions, pygame.SRCALPHA)
+                l = r = u = d = None
     
     if len(sprite_pixels_to_check):
         # for pixel_pos in sprite_pixels_to_check[::-1]:
