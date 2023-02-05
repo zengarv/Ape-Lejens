@@ -4,9 +4,9 @@ from PIL import Image
 import os
 
 
-SPRITESHEET_PATH = os.getcwd() + "\\assets\\donk2walkcrop.png" # "SPRITESHEET PATH (in assets folder: donk2.png)"
-TARGET_FOLDER = os.getcwd() + "\\monke"   # r"eg. Monke Folder"
-IMG_NAME = "Monke Walk"
+SPRITESHEET_PATH = os.getcwd() + "\\assets\\rolypolycrop.png" # "SPRITESHEET PATH (in assets folder: donk2.png)"
+TARGET_FOLDER = os.getcwd() + "\\roly_poly"   # r"eg. Monke Folder"
+IMG_NAME = "Roly Poly"
 
 frogs = list(filter(lambda file: True if IMG_NAME in file else False, os.listdir(TARGET_FOLDER))).sort()
 j = frogs[-1][-1] if frogs != None else 1
