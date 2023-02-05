@@ -46,7 +46,7 @@ while run:
                 l = r = u = d = None
                 print("Saved Image")
             
-            elif event.key = pygame.K_ESC:
+            elif event.key == pygame.K_ESC:
                 selection_surf = pygame.Surface(dimensions, pygame.SRCALPHA)
                 l = r = u = d = None
     
