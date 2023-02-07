@@ -22,44 +22,62 @@ class Goril:
     walk_right = center_frames([pygame.image.load(f"monke\\walk\\Monke Walk {i}.png") for i in range(1, 9)])
     walk_left = [pygame.transform.flip(frame, 1, 0) for frame in walk_right]
     walk_anim_time = 125
+    walk_speed = 0.25
 
-    def __init__(self):
+    def __init__(self, screen):
         self.t = 0
         self.vel_x, self.vel_y = 0, 0
-        self.switch_anim(self.walk_right)
+        self.x, self.y = 0, 0
+        self.x_max, self.y_max = screen.get_size()
+
+        self.walk_rect = self.walk_right[0].get_rect()
+        self.rect = self.walk_rect
+        self.sprite = self.walk_right[0]
         self.anim_time = self.walk_anim_time
+        self.anim_index = 0
         self.switch_frame_at = self.t + self.anim_time
-        
-        self.sprite = self.walk_right[self.anim_index]
-        
+                
         self.gravity = 0.005
         self.facing = 'right'
         self.moving = False
     
-    def switch_anim(self, frames):
-        self.anim_index = 0
-        self.frames = frames
-        self.rect = self.frames[0].get_rect()
         
     def update(self, dt, floor = 800):
         # Gravity:
         self.t += dt
-        self.vel_y = self.vel_y+self.gravity*dt if self.rect.bottom < floor else 0
-        self.rect.bottom = min(floor, self.rect.bottom+self.vel_y*dt)
-        self.animate()
+        
+        if self.y >= floor and self.vel_y > 0: 
+            self.vel_y = 0
+        else: self.vel_y = self.vel_y+self.gravity*dt 
+        self.y = min(floor, self.y+self.vel_y*dt)
+        self.rect.midbottom = self.x, self.y
+        
+        self.move(dt)
 
     def draw(self, screen):
         screen.blit(self.sprite, self.rect)
     
-    # def animate(self):
-    #     if self.t > self.switch_frame_at:
-    #         self.switch_frame_at += self.anim_time
-    #         self.anim_index = (self.anim_index + 1) % len(self.frames)
-    #         self.sprite = self.frames[self.anim_index]
-    
-    def move(self, screen):
+    def move(self, dt):
         if self.moving:
-            self.animate()
+            if self.facing == 'left': 
+                self.x = max(self.x-self.walk_speed*dt, 0)
+            else: 
+                self.x = min(self.x+self.walk_speed*dt, self.x_max)
+            
+            if self.t > self.switch_frame_at:
+                self.switch_frame_at += self.walk_anim_time
+                self.anim_index = (self.anim_index + 1) % len(self.walk_left)
+                self.sprite = self.walk_left[self.anim_index] if self.facing == 'left' else self.walk_right[self.anim_index]
+
+    def stop_moving(self):
+        self.moving = False
+    
+    def jump(self):
+        self.vel_y -= 2
+    
+    def set_next_anim_time(self):
+        self.switch_frame_at = self.t 
+
 
 
 if __name__ == '__main__':
@@ -67,7 +85,7 @@ if __name__ == '__main__':
     screen = pygame.display.set_mode((1000, 850))
     clock = pygame.time.Clock()
     
-    goril = Goril()
+    goril = Goril(screen)
     run = True
     while run:
         dt = clock.tick(FPS)
@@ -75,6 +93,25 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
+            
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_d:
+                    goril.set_next_anim_time()
+                    goril.moving = True
+                    goril.facing = 'right'
+                elif event.key == pygame.K_a:
+                    goril.set_next_anim_time()
+                    goril.moving = True
+                    goril.facing = 'left'
+                
+                elif event.key == pygame.K_SPACE:
+                    goril.jump()
+            
+            elif event.type == pygame.KEYUP:
+                if event.key == pygame.K_d:
+                    goril.stop_moving()
+                elif event.key == pygame.K_a:
+                    goril.stop_moving()
 
         screen.fill((30, 30, 30))
         goril.update(dt if dt != 0 else 1/FPS)
