@@ -4,18 +4,19 @@ from PIL import Image
 import os
 
 
-SPRITESHEET_PATH = os.getcwd() + "\\assets\\rolypolycrop.png" # "SPRITESHEET PATH (in assets folder: donk2.png)"
-TARGET_FOLDER = os.getcwd() + "\\roly_poly"   # r"eg. Monke Folder"
-IMG_NAME = "Roly Poly"
+SPRITESHEET_PATH = "assets\\donk.png" # "SPRITESHEET PATH (in assets folder: donk2.png)"
+TARGET_FOLDER = "monke\\walk"   # r"eg. Monke Folder"
+IMG_NAME = "Testy Pesty"
 
 frogs = list(filter(lambda file: True if IMG_NAME in file else False, os.listdir(TARGET_FOLDER))).sort()
 j = frogs[-1][-1] if frogs != None else 1
 
 spritesheet = pygame.image.load(SPRITESHEET_PATH)
+spritesheet_rect = spritesheet.get_rect()
 spritesheet_pil = Image.open(SPRITESHEET_PATH)
 dimensions = spritesheet.get_size()
 
-screen = pygame.display.set_mode(dimensions)
+screen = pygame.display.set_mode((1000, 1000))
 selection_surf = pygame.Surface(dimensions, pygame.SRCALPHA)
 sprite_pixels_to_check = []
 SELECTION_COL = (50, 200, 160)
@@ -24,19 +25,32 @@ SELECTION_COL = (50, 200, 160)
 l = r = u = d = None
 
 run = True
+middle_mouse_down = False
 while run:
     for event in pygame.event.get():
         
         if event.type == pygame.QUIT:
             run = False
         
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:
+                event.pos = event.pos[0] - spritesheet_rect.left, event.pos[1] - spritesheet_rect.top
                 sprite_pixels_to_check.append(event.pos)
                 l = r = event.pos[0]
                 u = d = event.pos[1]
+            
+            if event.button == 2:
+                middle_mouse_down = True
         
-        if event.type == pygame.KEYDOWN:
+        elif event.type == pygame.MOUSEBUTTONUP:
+            if event.button == 2:
+                middle_mouse_down = False
+                
+        elif event.type == pygame.MOUSEMOTION:
+            if middle_mouse_down:
+                spritesheet_rect.topleft = spritesheet_rect.left + event.rel[0], spritesheet_rect.top + event.rel[1]
+        
+        elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_SPACE:
                 img = spritesheet_pil.crop((l, u+1, r+1, d+1))
                 img.save(f"{TARGET_FOLDER}\\{IMG_NAME} {j}.png")
@@ -76,8 +90,8 @@ while run:
         print((l, r, u, d))
         
     screen.fill((30, 30, 30))
-    screen.blit(spritesheet, (0, 0))
-    screen.blit(selection_surf, (0, 0))
+    screen.blit(spritesheet, spritesheet_rect)
+    screen.blit(selection_surf, spritesheet_rect)
     
     pygame.display.update()
 
