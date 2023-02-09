@@ -54,6 +54,7 @@ def add_rev_anim(frames:list):
 
 move_right_key = pygame.K_d
 move_left_key = pygame.K_a
+jump_key = pygame.K_SPACE
 class Goril:
     def __init__(self, screen):
         self.x, self.y = 0, 0    # Bottom x, y
@@ -99,6 +100,13 @@ class Goril:
                 if not self.is_on_floor:
                     self.jump_anim.rect.midbottom = self.x, self.y
                     screen.blit(self.jump_anim(self.facing), self.jump_anim.rect)
+                    
+                    if self.keys[move_right_key] or self.keys[move_left_key]:
+                        self.facing = 'right' if keys[move_right_key] else 'left'
+                        if self.facing == 'left': 
+                            self.x = max(self.x-self.walk_vel*dt, 0)
+                        else: 
+                            self.x = min(self.x+self.walk_vel*dt, self.x_max)
     
     def on_floor(self):
         self.y_vel = 0
@@ -107,12 +115,21 @@ class Goril:
             self.status = 'idle'
     
     def jump(self):
-        self.y_vel -= self.jump_vel
-        self.status = 'jump'
-        self.is_on_floor = False
+        if self.is_on_floor:
+            self.y_vel -= self.jump_vel
+            self.status = 'jump'
+            self.is_on_floor = False
     
     def keys_pressed(self, keys):
-        if (keys[move_right_key] or keys[move_left_key]) and self.is_on_floor: self.status = 'walk'
+        self.keys = keys
+        if keys[jump_key]: self.jump()
+        
+        elif (keys[move_right_key] or keys[move_left_key]) and self.is_on_floor: 
+            self.status = 'walk' if keys[move_right_key] ^ keys[move_left_key] else 'idle'
+            self.facing = 'right' if keys[move_right_key] else 'left'
+        else: 
+            if self.is_on_floor: self.status = 'idle'
+        
         
     
 if __name__ == '__main__':
@@ -128,24 +145,7 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-            
-            elif event.type == pygame.KEYDOWN:
-                if event.key == move_right_key:
-                    goril.facing = 'right'
-                    goril.status = 'walk'
-                elif event.key == move_left_key:
-                    goril.facing = 'left'
-                    goril.status = 'walk'
-                
-                elif event.key == pygame.K_SPACE:
-                    goril.jump()
-            
-            elif event.type == pygame.KEYUP:
-                if event.key == move_right_key:
-                    goril.status = 'idle'
-                elif event.key == move_left_key:
-                    goril.status = 'idle'
-        
+                   
         keys = pygame.key.get_pressed()
         
         goril.keys_pressed(keys)
