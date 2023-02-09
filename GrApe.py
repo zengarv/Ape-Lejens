@@ -44,12 +44,18 @@ class Animashyun:
         if self.t >= self.next_frame_at:
             self.next_frame_at += self.frame_duration
             self.frame_index = (self.frame_index+1) % self.num_frames
+    
+    def reset(self):
+        self.frame_index = 0
+        self.t = 0
+        self.next_frame_at = self.t + self.frame_duration
         
     def __call__(self, facing):
         return self.frames[facing][self.frame_index]
         
-def add_rev_anim(frames:list):
-    frames.extend(frames[-2::-1])
+def add_rev_anim(frames:list, repeat_last = False):
+    if not repeat_last: frames.extend(frames[-2::-1])
+    else: frames.extend(frames[-1::-1])
     return frames
 
 move_right_key = pygame.K_d
@@ -68,10 +74,11 @@ class Goril:
         self.status = 'idle'
         self.is_on_floor = False
                 
-        self.walk_anim = Animashyun([pygame.image.load(f"monke\\walk\\Monke Walk {i}.png") for i in range(1, 9)], 125)
-        self.jump_anim = Animashyun(add_rev_anim([pygame.image.load(f"monke\\jump\\Monke jump {i}.png") for i in range(1, 6)]), (2*self.jump_vel/self.gravity)/9-2.5)
+        self.walk_anim = Animashyun([pygame.image.load(f"monke\\walk\\Monke Walk {i}.png") for i in range(1, 9)], 120)
+        self.jump_anim = Animashyun(add_rev_anim([pygame.image.load(f"monke\\jump\\Monke jump {i}.png") for i in range(1, 6)], repeat_last=True), (2*self.jump_vel/self.gravity)/10)
         
-    def update(self, dt, floor=800):
+    def update(self, dt, keys, floor=800):
+        self.keys_pressed(keys)
         self.x += self.x_vel*dt
         
         if self.y >= floor and self.y_vel > 0: self.on_floor()
@@ -102,7 +109,7 @@ class Goril:
                     screen.blit(self.jump_anim(self.facing), self.jump_anim.rect)
                     
                     if self.keys[move_right_key] or self.keys[move_left_key]:
-                        self.facing = 'right' if keys[move_right_key] else 'left'
+                        self.facing = 'right' if self.keys[move_right_key] else 'left'
                         if self.facing == 'left': 
                             self.x = max(self.x-self.walk_vel*dt, 0)
                         else: 
@@ -112,7 +119,9 @@ class Goril:
         self.y_vel = 0
         self.is_on_floor = True
         if self.status == 'jump':
+            self.walk_anim.reset()
             self.status = 'idle'
+            self.jump_anim.reset()
     
     def jump(self):
         if self.is_on_floor:
@@ -128,12 +137,14 @@ class Goril:
             self.status = 'walk' if keys[move_right_key] ^ keys[move_left_key] else 'idle'
             self.facing = 'right' if keys[move_right_key] else 'left'
         else: 
-            if self.is_on_floor: self.status = 'idle'
+            if self.is_on_floor: 
+                self.status = 'idle'
+                
         
         
     
 if __name__ == '__main__':
-    FPS = 60
+    FPS = 144
     screen = pygame.display.set_mode((1000, 850))
     clock = pygame.time.Clock()
     
@@ -145,12 +156,9 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 run = False
-                   
-        keys = pygame.key.get_pressed()
-        
-        goril.keys_pressed(keys)
+
         screen.fill((30, 30, 30))
-        goril.update(dt if dt != 0 else 1/FPS)
+        goril.update(dt if dt != 0 else 1/FPS, pygame.key.get_pressed())
         goril.draw(screen)
         
         
