@@ -5,8 +5,8 @@ import os
 
 
 SPRITESHEET_PATH = "assets\\donk.png" # "SPRITESHEET PATH (in assets folder: donk2.png)"
-TARGET_FOLDER = "monke\\jump"   # r"eg. Monke Folder"
-IMG_NAME = "Monke jump"
+TARGET_FOLDER = "monke\\crouch"   # r"eg. Monke Folder"
+IMG_NAME = "Monke Ground Pound"
 
 frogs = list(filter(lambda file: True if IMG_NAME in file else False, os.listdir(TARGET_FOLDER))).sort()
 j = frogs[-1][-1] if frogs != None else 1
