@@ -5,8 +5,8 @@ import os
 
 
 SPRITESHEET_PATH = "assets\\donk.png" # "SPRITESHEET PATH (in assets folder: donk2.png)"
-TARGET_FOLDER = "monke\\walk"   # r"eg. Monke Folder"
-IMG_NAME = "Testy Pesty"
+TARGET_FOLDER = "monke\\jump"   # r"eg. Monke Folder"
+IMG_NAME = "Monke jump"
 
 frogs = list(filter(lambda file: True if IMG_NAME in file else False, os.listdir(TARGET_FOLDER))).sort()
 j = frogs[-1][-1] if frogs != None else 1
@@ -57,7 +57,6 @@ while run:
                 j += 1
                 selection_surf = pygame.Surface(dimensions, pygame.SRCALPHA)
                 l = r = u = d = None
-                print("Saved Image")
             
             elif event.key == pygame.K_ESCAPE:
                 selection_surf = pygame.Surface(dimensions, pygame.SRCALPHA)

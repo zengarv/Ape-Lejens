@@ -48,7 +48,12 @@ class Animashyun:
     def __call__(self, facing):
         return self.frames[facing][self.frame_index]
         
+def add_rev_anim(frames:list):
+    frames.extend(frames[-2::-1])
+    return frames
 
+move_right_key = pygame.K_d
+move_left_key = pygame.K_a
 class Goril:
     def __init__(self, screen):
         self.x, self.y = 0, 0    # Bottom x, y
@@ -60,32 +65,54 @@ class Goril:
         self.gravity = 0.005
         self.facing = 'right'
         self.status = 'idle'
+        self.is_on_floor = False
                 
-        self.walk = Animashyun([pygame.image.load(f"monke\\walk\\Monke Walk {i}.png") for i in range(1, 9)], 125)
+        self.walk_anim = Animashyun([pygame.image.load(f"monke\\walk\\Monke Walk {i}.png") for i in range(1, 9)], 125)
+        self.jump_anim = Animashyun(add_rev_anim([pygame.image.load(f"monke\\jump\\Monke jump {i}.png") for i in range(1, 6)]), (2*self.jump_vel/self.gravity)/9-2.5)
         
     def update(self, dt, floor=800):
         self.x += self.x_vel*dt
         
-        if self.y >= floor and self.y_vel > 0: 
-            self.y_vel = 0
+        if self.y >= floor and self.y_vel > 0: self.on_floor()
+            
         else: self.y_vel = self.y_vel+self.gravity*dt 
         self.y = min(floor, self.y+self.y_vel*dt)
         
-        if self.status == 'walk':
-            self.walk.tick(dt)
-            if self.facing == 'left': 
-                self.x = max(self.x-self.walk_vel*dt, 0)
-            else: 
-                self.x = min(self.x+self.walk_vel*dt, self.x_max)
+        match self.status:
+            case 'walk':
+                self.walk_anim.tick(dt)
+                if self.facing == 'left': 
+                    self.x = max(self.x-self.walk_vel*dt, 0)
+                else: 
+                    self.x = min(self.x+self.walk_vel*dt, self.x_max)
+                
+            case 'jump':
+                self.jump_anim.tick(dt)
     
     def draw(self, screen):
-        if self.status in ['walk', 'idle']:
-            self.walk.rect.midbottom = self.x, self.y
-            screen.blit(self.walk(self.facing), self.walk.rect)
+        match self.status:
+            case 'walk' | 'idle':
+                self.walk_anim.rect.midbottom = self.x, self.y
+                screen.blit(self.walk_anim(self.facing), self.walk_anim.rect)
             
+            case 'jump':
+                if not self.is_on_floor:
+                    self.jump_anim.rect.midbottom = self.x, self.y
+                    screen.blit(self.jump_anim(self.facing), self.jump_anim.rect)
+    
+    def on_floor(self):
+        self.y_vel = 0
+        self.is_on_floor = True
+        if self.status == 'jump':
+            self.status = 'idle'
     
     def jump(self):
         self.y_vel -= self.jump_vel
+        self.status = 'jump'
+        self.is_on_floor = False
+    
+    def keys_pressed(self, keys):
+        if (keys[move_right_key] or keys[move_left_key]) and self.is_on_floor: self.status = 'walk'
         
     
 if __name__ == '__main__':
@@ -103,10 +130,10 @@ if __name__ == '__main__':
                 run = False
             
             elif event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_d:
+                if event.key == move_right_key:
                     goril.facing = 'right'
                     goril.status = 'walk'
-                elif event.key == pygame.K_a:
+                elif event.key == move_left_key:
                     goril.facing = 'left'
                     goril.status = 'walk'
                 
@@ -114,11 +141,14 @@ if __name__ == '__main__':
                     goril.jump()
             
             elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_d:
+                if event.key == move_right_key:
                     goril.status = 'idle'
-                elif event.key == pygame.K_a:
+                elif event.key == move_left_key:
                     goril.status = 'idle'
-
+        
+        keys = pygame.key.get_pressed()
+        
+        goril.keys_pressed(keys)
         screen.fill((30, 30, 30))
         goril.update(dt if dt != 0 else 1/FPS)
         goril.draw(screen)
